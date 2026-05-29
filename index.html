@@ -309,6 +309,7 @@
   }
 
   .popup.wide { width: min(520px, calc(100vw - 32px)); }
+  .popup.settings { width: min(420px, calc(100vw - 32px)); padding: 0; overflow: hidden; }
 
   .popup-head {
     display: flex;
@@ -316,6 +317,8 @@
     justify-content: space-between;
     margin-bottom: 12px;
   }
+
+  .settings .popup-head { padding: 14px 16px 0; margin-bottom: 10px; }
 
   .popup-head p { font-size: .88rem; font-weight: 700; color: var(--ink); }
 
@@ -375,6 +378,118 @@
     margin-top: 14px;
   }
 
+  .settings-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 0 16px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .settings-tab {
+    min-height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel);
+    color: var(--muted);
+    font-size: .78rem;
+    font-weight: 700;
+  }
+
+  .settings-tab.active {
+    background: var(--focus);
+    color: #fff;
+    border-color: var(--focus);
+  }
+
+  .settings-content { padding: 14px 16px 2px; }
+  .settings-panel[hidden] { display: none; }
+  .settings .popup-footer { padding: 12px 16px 16px; border-top: 1px solid var(--line); margin-top: 8px; }
+
+  .help {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: .68rem;
+    line-height: 1.45;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--panel-3);
+    color: var(--muted);
+    font-size: .68rem;
+    font-weight: 700;
+  }
+
+  .sync-actions {
+    display: flex;
+    gap: 6px;
+    margin: 8px 0 10px;
+  }
+
+  .stack-title-card .card-header { border-bottom: 1px solid var(--line); }
+
+  .carryover-banner {
+    margin: 10px 12px 12px;
+    border: 1px solid var(--danger-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel);
+  }
+
+  .carryover-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 10px;
+    background: var(--danger-soft);
+    border-bottom: 1px solid var(--danger-border);
+    color: var(--danger-label);
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  .danger-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--danger);
+  }
+
+  .carryover-row {
+    display: grid;
+    grid-template-columns: auto minmax(0,1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px;
+    border-top: 1px solid #fde8e6;
+  }
+
+  [data-theme="dark"] .carryover-row { border-top-color: var(--danger-border); }
+  .carryover-row:first-of-type { border-top: none; }
+
+  .week-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--danger-soft);
+    color: var(--danger-label);
+    font-size: .68rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .carry-main { min-width: 0; }
+  .carry-main b { display: block; color: var(--ink); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .carry-main span, .carry-day { color: var(--muted); font-size: .72rem; white-space: nowrap; }
+
   .empty {
     color: var(--muted);
     font-size: .72rem;
@@ -412,8 +527,7 @@
     </div>
     <div class="header-right">
       <button class="theme-toggle" id="themeBtn">🌙 ダーク</button>
-      <button class="btn" id="semesterBtn">学期設定</button>
-      <button class="btn" id="syncToggleButton">同期設定</button>
+      <button class="btn" id="settingsButton">設定</button>
       <div class="date-badge">
         <p class="mo" id="monthLabel"></p>
         <p class="dy" id="dayLabel"></p>
@@ -510,29 +624,68 @@
   </div>
 </div>
 
-<div id="syncPanel" class="popup-overlay" style="display:none;">
-  <div class="popup wide">
+<div id="settingsPopup" class="popup-overlay" style="display:none;">
+  <div class="popup settings">
     <div class="popup-head">
-      <p>同期設定</p>
-      <button class="popup-close" id="closeSyncButton">✕</button>
+      <p>設定</p>
+      <button class="popup-close" id="closeSettingsButton">✕</button>
     </div>
-    <div class="field">
-      <label>Supabase URL</label>
-      <input id="syncUrlInput" placeholder="https://xxxx.supabase.co">
+    <div class="settings-tabs" role="tablist">
+      <button class="settings-tab active" type="button" data-settings-tab="semester">学期</button>
+      <button class="settings-tab" type="button" data-settings-tab="sync">同期</button>
+      <button class="settings-tab" type="button" data-settings-tab="notify">通知</button>
     </div>
-    <div class="field">
-      <label>publishable key</label>
-      <input id="syncKeyInput" type="password" placeholder="publishable key">
+    <div class="settings-content">
+      <section class="settings-panel" data-settings-panel="semester">
+        <div class="field">
+          <label>学期開始日</label>
+          <input id="semesterStartInput" type="date">
+        </div>
+        <div class="field">
+          <label>学期名</label>
+          <input id="semesterNameInput" type="text" placeholder="例: 前期">
+        </div>
+      </section>
+      <section class="settings-panel" data-settings-panel="sync" hidden>
+        <div class="field">
+          <label>最終同期時刻</label>
+          <span class="status-badge" id="lastSyncBadge">未同期</span>
+        </div>
+        <div class="field">
+          <label>Supabase Project URL</label>
+          <input id="syncUrlInput" type="url" placeholder="https://xxxx.supabase.co">
+        </div>
+        <div class="field">
+          <label>Publishable Key</label>
+          <input id="syncKeyInput" type="text" placeholder="publishable key">
+        </div>
+        <div class="field">
+          <label>同期ID</label>
+          <input id="syncIdInput" type="text" maxlength="80" placeholder="例: my-university-board">
+          <p class="help">他端末と同じIDで同期されます。</p>
+        </div>
+        <div class="sync-actions">
+          <button type="button" class="btn" id="pullSyncButton">受信</button>
+          <button type="button" class="btn-primary" id="pushSyncButton">送信</button>
+        </div>
+        <p class="sync-status" id="syncStatus">Supabase の assignment_sync テーブルを作成して、同じ同期IDを各端末に設定してください。</p>
+      </section>
+      <section class="settings-panel" data-settings-panel="notify" hidden>
+        <div class="field">
+          <label>チェック間隔（秒）</label>
+          <input id="checkIntervalInput" type="number" min="5" step="1" value="30">
+          <p class="help">画面表示と通知チェックを行う間隔です。デフォルトは30秒です。</p>
+        </div>
+        <div class="field">
+          <label>自動受信間隔（秒）</label>
+          <input id="autoPullIntervalInput" type="number" min="5" step="1" value="30">
+          <p class="help">Supabaseから他端末の変更を受信する間隔です。デフォルトは30秒です。</p>
+        </div>
+      </section>
     </div>
-    <div class="field">
-      <label>同期ID</label>
-      <input id="syncIdInput" maxlength="80" placeholder="例: my-university-board">
-    </div>
-    <p class="sync-status" id="syncStatus">Supabase の assignment_sync テーブルを作成して、同じ同期IDを各端末に設定してください。</p>
     <div class="popup-footer">
-      <button class="btn" id="saveSyncButton">保存</button>
-      <button class="btn" id="pullSyncButton">受信</button>
-      <button class="btn-primary" id="pushSyncButton">送信</button>
+      <button class="btn" id="cancelSettingsButton">キャンセル</button>
+      <button class="btn-primary" id="saveSettingsButton">保存</button>
     </div>
   </div>
 </div>
@@ -542,9 +695,9 @@
   const COMPLETION_KEY = "university-assignment-completions-v2";
   const SETTINGS_KEY = "university-assignment-settings-v2";
   const SYNC_KEY = "university-assignment-sync-v1";
-  const CHECK_INTERVAL_MS = 30000;
+  const DEFAULT_CHECK_INTERVAL_MS = 30000;
   const AUTO_SYNC_DELAY_MS = 1200;
-  const AUTO_PULL_INTERVAL_MS = 30000;
+  const DEFAULT_AUTO_PULL_INTERVAL_MS = 30000;
   const WEEKDAYS = [
     { id: "mon", label: "月", long: "月曜" },
     { id: "tue", label: "火", long: "火曜" },
@@ -561,7 +714,10 @@
     sync: loadSyncConfig(),
     editingMasterId: null,
     syncApplying: false,
-    autoSyncTimer: null
+    autoSyncTimer: null,
+    renderTimer: null,
+    pullTimer: null,
+    settingsTab: "semester"
   };
 
   const els = {
@@ -569,8 +725,7 @@
     monthLabel: document.querySelector("#monthLabel"),
     dayLabel: document.querySelector("#dayLabel"),
     themeBtn: document.querySelector("#themeBtn"),
-    semesterBtn: document.querySelector("#semesterBtn"),
-    syncToggle: document.querySelector("#syncToggleButton"),
+    settingsButton: document.querySelector("#settingsButton"),
     masterBody: document.querySelector("#masterBody"),
     stackCard: document.querySelector("#stackCard"),
     weekMetric: document.querySelector("#weekMetric"),
@@ -592,13 +747,19 @@
     masterNote: document.querySelector("#masterNoteInput"),
     masterUrl: document.querySelector("#masterUrlInput"),
     masterUrlOpen: document.querySelector("#masterUrlOpen"),
-    syncPanel: document.querySelector("#syncPanel"),
-    closeSync: document.querySelector("#closeSyncButton"),
+    settingsPopup: document.querySelector("#settingsPopup"),
+    closeSettings: document.querySelector("#closeSettingsButton"),
+    cancelSettings: document.querySelector("#cancelSettingsButton"),
+    saveSettingsButton: document.querySelector("#saveSettingsButton"),
+    semesterStartInput: document.querySelector("#semesterStartInput"),
+    semesterNameInput: document.querySelector("#semesterNameInput"),
+    checkIntervalInput: document.querySelector("#checkIntervalInput"),
+    autoPullIntervalInput: document.querySelector("#autoPullIntervalInput"),
+    lastSyncBadge: document.querySelector("#lastSyncBadge"),
     syncUrl: document.querySelector("#syncUrlInput"),
     syncKey: document.querySelector("#syncKeyInput"),
     syncId: document.querySelector("#syncIdInput"),
     syncStatus: document.querySelector("#syncStatus"),
-    saveSync: document.querySelector("#saveSyncButton"),
     pullSync: document.querySelector("#pullSyncButton"),
     pushSync: document.querySelector("#pushSyncButton"),
     exportButton: document.querySelector("#exportButton"),
@@ -621,7 +782,14 @@
   }
 
   function loadSettings() {
-    const fallback = { semesterStart: defaultSemesterStart(), theme: "light" };
+    const fallback = {
+      semesterStart: defaultSemesterStart(),
+      semesterName: "",
+      theme: "light",
+      checkIntervalSec: 30,
+      autoPullIntervalSec: 30,
+      lastSyncAt: ""
+    };
     try {
       return { ...fallback, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") };
     } catch {
@@ -698,6 +866,33 @@
     localStorage.setItem(SYNC_KEY, JSON.stringify(state.sync));
   }
 
+  function readSettingsForm() {
+    state.settings.semesterStart = els.semesterStartInput.value || defaultSemesterStart();
+    state.settings.semesterName = els.semesterNameInput.value.trim();
+    state.settings.checkIntervalSec = Math.max(5, Number(els.checkIntervalInput.value || 30));
+    state.settings.autoPullIntervalSec = Math.max(5, Number(els.autoPullIntervalInput.value || 30));
+    saveSyncConfig();
+  }
+
+  function fillSettingsForm() {
+    els.semesterStartInput.value = state.settings.semesterStart || defaultSemesterStart();
+    els.semesterNameInput.value = state.settings.semesterName || "";
+    els.checkIntervalInput.value = state.settings.checkIntervalSec || 30;
+    els.autoPullIntervalInput.value = state.settings.autoPullIntervalSec || 30;
+    els.syncUrl.value = state.sync.url || "";
+    els.syncKey.value = state.sync.key || "";
+    els.syncId.value = state.sync.id || "";
+    els.lastSyncBadge.textContent = state.settings.lastSyncAt ? new Date(state.settings.lastSyncAt).toLocaleString("ja-JP") : "未同期";
+  }
+
+  function checkIntervalMs() {
+    return Math.max(5, Number(state.settings.checkIntervalSec || 30)) * 1000;
+  }
+
+  function autoPullIntervalMs() {
+    return Math.max(5, Number(state.settings.autoPullIntervalSec || 30)) * 1000;
+  }
+
   function getWeekNumber(offset = 0) {
     const start = new Date(`${state.settings.semesterStart}T00:00:00`);
     const diff = today() - start;
@@ -743,7 +938,8 @@
     const week = getWeekNumber();
     els.monthLabel.textContent = `${date.getMonth() + 1}月`;
     els.dayLabel.textContent = date.getDate();
-    els.semesterLabel.textContent = `学期開始日：${formatDateLabel(state.settings.semesterStart)}　／　現在：第${week}週`;
+    const name = state.settings.semesterName ? `${state.settings.semesterName}　／　` : "";
+    els.semesterLabel.textContent = `${name}学期開始日：${formatDateLabel(state.settings.semesterStart)}　／　現在：第${week}週`;
     els.weekMetric.textContent = `第${week}回`;
   }
 
@@ -802,18 +998,14 @@
     els.carryMetric.textContent = carryovers.length;
     els.doneMetric.textContent = doneThisWeek;
     els.stackCard.innerHTML = "";
-
-    if (carryovers.length) {
-      const section = document.createElement("div");
-      section.className = "stack-section carryover";
-      section.innerHTML = `<p class="sec-label danger">繰り越し（第${previousWeek}回・未完了）</p><div class="task-cards"></div>`;
-      carryovers.forEach(master => section.querySelector(".task-cards").append(renderTaskCard(master, previousWeek, true)));
-      els.stackCard.append(section);
-    }
+    els.stackCard.classList.add("stack-title-card");
+    els.stackCard.innerHTML = `
+      <div class="card-header"><p>第${week}回　今週の課題</p></div>
+    `;
 
     const section = document.createElement("div");
     section.className = "stack-section";
-    section.innerHTML = `<p class="sec-label">第${week}回　今週</p><div class="task-cards"></div>`;
+    section.innerHTML = `<div class="task-cards"></div>`;
     const cards = section.querySelector(".task-cards");
     if (!state.masters.length) {
       cards.innerHTML = `<p class="empty">毎週の課題マスタを追加してください。</p>`;
@@ -821,13 +1013,38 @@
       state.masters.forEach(master => cards.append(renderTaskCard(master, week)));
     }
     els.stackCard.append(section);
+
+    if (carryovers.length) {
+      const banner = document.createElement("div");
+      banner.className = "carryover-banner";
+      banner.innerHTML = `
+        <div class="carryover-head"><span class="danger-dot"></span><span>繰り越し未完了</span></div>
+      `;
+      carryovers.forEach(master => {
+        const done = isDone(master.id, previousWeek);
+        const row = document.createElement("div");
+        row.className = "carryover-row";
+        row.innerHTML = `
+          <span class="week-badge">第${previousWeek}回</span>
+          <div class="carry-main"><b></b><span></span></div>
+          <span class="carry-day"></span>
+          <input type="checkbox">
+        `;
+        row.querySelector("b").textContent = master.lecture;
+        row.querySelector(".carry-main span").textContent = master.taskName;
+        row.querySelector(".carry-day").textContent = dayLabel(master.weekday, true);
+        row.querySelector("input").checked = done;
+        row.querySelector("input").addEventListener("change", event => setDone(master.id, previousWeek, event.target.checked));
+        banner.append(row);
+      });
+      els.stackCard.append(banner);
+    }
   }
 
   function render() {
     renderHeader();
     renderMasterTable();
     renderStack();
-    els.syncToggle.textContent = state.sync.id ? "同期" : "同期設定";
   }
 
   function openMasterPopup(id = null) {
@@ -879,15 +1096,24 @@
     render();
   }
 
-  function openSyncPanel() {
-    els.syncUrl.value = state.sync.url || "";
-    els.syncKey.value = state.sync.key || "";
-    els.syncId.value = state.sync.id || "";
-    els.syncPanel.style.display = "flex";
+  function switchSettingsTab(tab) {
+    state.settingsTab = tab;
+    document.querySelectorAll(".settings-tab").forEach(button => {
+      button.classList.toggle("active", button.dataset.settingsTab === tab);
+    });
+    document.querySelectorAll(".settings-panel").forEach(panel => {
+      panel.hidden = panel.dataset.settingsPanel !== tab;
+    });
   }
 
-  function closeSyncPanel() {
-    els.syncPanel.style.display = "none";
+  function openSettingsPopup(tab = "semester") {
+    fillSettingsForm();
+    switchSettingsTab(tab);
+    els.settingsPopup.style.display = "flex";
+  }
+
+  function closeSettingsPopup() {
+    els.settingsPopup.style.display = "none";
   }
 
   function setSyncStatus(message) {
@@ -942,7 +1168,7 @@
       try {
         await pushSync(true);
       } catch (error) {
-        if (els.syncPanel.style.display !== "none") setSyncStatus(`自動送信できませんでした: ${error.message}`);
+        if (els.settingsPopup.style.display !== "none") setSyncStatus(`自動送信できませんでした: ${error.message}`);
       }
     }, AUTO_SYNC_DELAY_MS);
   }
@@ -956,7 +1182,10 @@
       body: JSON.stringify({ id: config.id, data: buildSyncPayload(), updated_at: new Date().toISOString() })
     });
     if (!response.ok) throw new Error(await response.text());
-    if (els.syncPanel.style.display !== "none") setSyncStatus(`${isAuto ? "自動送信" : "送信"}しました: ${new Date().toLocaleString("ja-JP")}`);
+    state.settings.lastSyncAt = new Date().toISOString();
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
+    fillSettingsForm();
+    if (els.settingsPopup.style.display !== "none") setSyncStatus(`${isAuto ? "自動送信" : "送信"}しました: ${new Date().toLocaleString("ja-JP")}`);
   }
 
   async function pullSync(isAuto = false) {
@@ -973,7 +1202,11 @@
       return;
     }
     applySyncPayload(rows[0].data);
-    if (els.syncPanel.style.display !== "none") setSyncStatus(`${isAuto ? "自動受信" : "受信"}しました: ${new Date(rows[0].updated_at).toLocaleString("ja-JP")}`);
+    state.settings.lastSyncAt = rows[0].updated_at || new Date().toISOString();
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
+    restartTimers();
+    fillSettingsForm();
+    if (els.settingsPopup.style.display !== "none") setSyncStatus(`${isAuto ? "自動受信" : "受信"}しました: ${new Date(rows[0].updated_at).toLocaleString("ja-JP")}`);
   }
 
   els.themeBtn.addEventListener("click", () => {
@@ -981,13 +1214,9 @@
     saveSettings();
   });
 
-  els.semesterBtn.addEventListener("click", () => {
-    const value = prompt("学期開始日を YYYY-MM-DD で入力してください。", state.settings.semesterStart);
-    if (!value) return;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
-    state.settings.semesterStart = value;
-    saveSettings();
-    render();
+  els.settingsButton.addEventListener("click", () => openSettingsPopup("semester"));
+  document.querySelectorAll(".settings-tab").forEach(button => {
+    button.addEventListener("click", () => switchSettingsTab(button.dataset.settingsTab));
   });
 
   els.addMaster.addEventListener("click", () => openMasterPopup());
@@ -999,15 +1228,17 @@
     if (event.target === els.masterPopup) closeMasterPopup();
   });
 
-  els.syncToggle.addEventListener("click", openSyncPanel);
-  els.closeSync.addEventListener("click", closeSyncPanel);
-  els.syncPanel.addEventListener("click", event => {
-    if (event.target === els.syncPanel) closeSyncPanel();
+  els.closeSettings.addEventListener("click", closeSettingsPopup);
+  els.cancelSettings.addEventListener("click", closeSettingsPopup);
+  els.settingsPopup.addEventListener("click", event => {
+    if (event.target === els.settingsPopup) closeSettingsPopup();
   });
-  els.saveSync.addEventListener("click", () => {
-    saveSyncConfig();
-    setSyncStatus("同期設定を保存しました。変更時は自動送信、30秒ごとに自動受信します。");
-    scheduleAutoPush();
+  els.saveSettingsButton.addEventListener("click", () => {
+    readSettingsForm();
+    saveSettings();
+    restartTimers();
+    setSyncStatus("設定を保存しました。");
+    closeSettingsPopup();
     render();
   });
   els.pushSync.addEventListener("click", async () => {
@@ -1034,14 +1265,20 @@
     event.target.value = "";
   });
 
+  function restartTimers() {
+    window.clearInterval(state.renderTimer);
+    window.clearInterval(state.pullTimer);
+    state.renderTimer = window.setInterval(render, checkIntervalMs());
+    state.pullTimer = window.setInterval(() => {
+      pullSync(true).catch(error => {
+        if (els.settingsPopup.style.display !== "none") setSyncStatus(`自動受信できませんでした: ${error.message}`);
+      });
+    }, autoPullIntervalMs());
+  }
+
   setTheme(state.settings.theme);
   render();
-  setInterval(render, CHECK_INTERVAL_MS);
-  setInterval(() => {
-    pullSync(true).catch(error => {
-      if (els.syncPanel.style.display !== "none") setSyncStatus(`自動受信できませんでした: ${error.message}`);
-    });
-  }, AUTO_PULL_INTERVAL_MS);
+  restartTimers();
 </script>
 </body>
 </html>
